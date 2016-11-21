@@ -7,6 +7,7 @@ import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.fixedfunc.GLLightingFunc;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.FPSAnimator;
+import javafx.util.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -44,7 +45,6 @@ public class Canvas extends GLCanvas implements GLEventListener {
         this.model = model;
         this.addGLEventListener(this);
     }
-
 
     public static void main(String[] args) {
 
@@ -159,21 +159,53 @@ public class Canvas extends GLCanvas implements GLEventListener {
 
         gl.glDisable(GL2.GL_LIGHTING);
 
+        gl.glPushMatrix();
+
         gl.glTranslatef((float) xPosition, (float) yPosition, zoom);
         gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
         gl.glRotatef((float) oldAngleY, 1f, 0f, 0f);
 
-        double[][] points = calculateModel();
+        Pair<double[][], double[][]> pair = calculateModel();
 
+        double[][] points = pair.getKey();
+        double[][] color = pair.getValue();
 
+        double[][] reflectionMatrix = Utils.mirrorMatrix(new double[]{0, -4, 0}, new double[]{0.7, 1, 0.7});
+
+        double[][] projected = new double[points.length][points[0].length];
+        for (int i = 0; i < points.length; i++) {
+            projected[i] = Utils.vectMatrixMult(reflectionMatrix, points[i]);
+        }
+
+        gl.glEnable(GL2.GL_DEPTH_TEST);
+
+        drawModel(gl, points, color);
+
+        drawModel(gl, projected, color);
+
+        gl.glEnable(GL2.GL_BLEND);
+        gl.glBlendFunc(GL2.GL_SRC_COLOR, GL2.GL_DST_COLOR);
 
         drawFloor(gl);
 
-        drawModel(gl);
+        gl.glDisable(GL2.GL_BLEND);
+
+        gl.glDisable(GL2.GL_DEPTH_TEST);
+        gl.glPopMatrix();
     }
 
-    private void drawModel(GL2 gl) {
+    private void drawModel(GL2 gl, double[][] points, double[][] color) {
+        gl.glBegin(GL2.GL_POLYGON);
+        gl.glShadeModel(GLLightingFunc.GL_SMOOTH);
 
+        for (int i = 0; i < points.length; i++) {
+            gl.glColor3d(color[i][0], color[i][1], color[i][2]);
+            gl.glVertex3d(points[i][0], points[i][1], points[i][2]);
+        }
+        gl.glEnd();
+    }
+
+    private Pair<double[][], double[][]> calculateModel() {
         Vector lightPosition = new Vector(10, 0, 0);
         Vector viewerPosition = initPos(matrix);
 
@@ -183,63 +215,12 @@ public class Canvas extends GLCanvas implements GLEventListener {
         double deltaV = 0.02d;
         double vStart = 0;
         double vEnd = 4;
+        int n = 39004;
 
         double deltaColor = 0.000000001;
-        gl.glBegin(GL2.GL_POLYGON);
-        gl.glShadeModel(GLLightingFunc.GL_SMOOTH);
 
-        for (double tempU = uStart; tempU < uEnd - deltaU; tempU += deltaU) {
-            for (double tempV = vStart; tempV < vEnd - deltaV; tempV += deltaV) {
-                double newU = tempU + deltaU;
-                double newV = tempV + deltaV;
-
-                double x = model.funcX(newU, newV);
-                double y = model.funcY(newU, newV);
-                double z = model.funcZ(newU, newV);
-
-                double[] color1 = getLight(norm(tempU, tempV, deltaColor),
-                                           new Vector(x - lightPosition.getX(), y - lightPosition.getY(), z - lightPosition.getZ()),
-                                           viewerPosition);
-                gl.glColor3d(color1[0], color1[1], color1[2]);
-                gl.glVertex3d(model.funcX(tempU, tempV), model.funcY(tempU, tempV),
-                              model.funcZ(tempU, tempV));
-
-                double[] color2 = getLight(norm(newU, tempV, deltaColor),
-                                           new Vector(x - lightPosition.getX(), y - lightPosition.getY(), z - lightPosition.getZ()),
-                                           viewerPosition);
-                gl.glColor3d(color2[0], color2[1], color2[2]);
-                gl.glVertex3d(model.funcX(newU, tempV), model.funcY(newU, tempV),
-                              model.funcZ(newU, tempV));
-
-                double[] color3 = getLight(norm(tempU, newV, deltaColor),
-                                           new Vector(x - lightPosition.getX(), y - lightPosition.getY(), z - lightPosition.getZ()),
-                                           viewerPosition);
-                gl.glColor3d(color3[0], color3[1], color3[2]);
-                gl.glVertex3d(model.funcX(tempU, newV), model.funcY(tempU, newV),
-                              model.funcZ(tempU, newV));
-
-                double[] color4 = getLight(norm(newU, newV, deltaColor),
-                                           new Vector(x - lightPosition.getX(), y - lightPosition.getY(), z - lightPosition.getZ()),
-                                           viewerPosition);
-                gl.glColor3d(color4[0], color4[1], color4[2]);
-                gl.glVertex3d(x, y, z);
-            }
-        }
-        gl.glEnd();
-    }
-
-    private double[][] calculateModel() {
-
-        double uStart = 0;
-        double uEnd = 1;
-        double deltaU = 0.02d;
-        double deltaV = 0.02d;
-        double vStart = 0;
-        double vEnd = 4;
-
-        int n = Double.valueOf((uEnd - uStart) / deltaU + (vEnd - vStart) / deltaV).intValue();
-
-        double[][] points = new double[n][3];
+        double[][] color = new double[n][3];
+        double[][] points = new double[n][4];
 
         int i = 0;
 
@@ -252,38 +233,55 @@ public class Canvas extends GLCanvas implements GLEventListener {
                 double y = model.funcY(newU, newV);
                 double z = model.funcZ(newU, newV);
 
+                color[i] = getLight(norm(tempU, tempV, deltaColor),
+                                    new Vector(x - lightPosition.getX(), y - lightPosition.getY(), z - lightPosition.getZ()),
+                                    viewerPosition);
                 points[i][0] = model.funcX(tempU, tempV);
                 points[i][1] = model.funcY(tempU, tempV);
                 points[i][2] = model.funcZ(tempU, tempV);
+                points[i][3] = 1;
                 i++;
 
+                color[i] = getLight(norm(newU, tempV, deltaColor),
+                                    new Vector(x - lightPosition.getX(), y - lightPosition.getY(), z - lightPosition.getZ()),
+                                    viewerPosition);
                 points[i][0] = model.funcX(newU, tempV);
                 points[i][1] = model.funcY(newU, tempV);
                 points[i][2] = model.funcZ(newU, tempV);
+                points[i][3] = 1;
                 i++;
 
+                color[i] = getLight(norm(tempU, newV, deltaColor),
+                                    new Vector(x - lightPosition.getX(), y - lightPosition.getY(), z - lightPosition.getZ()),
+                                    viewerPosition);
                 points[i][0] = model.funcX(tempU, newV);
                 points[i][1] = model.funcY(tempU, newV);
                 points[i][2] = model.funcZ(tempU, newV);
+                points[i][3] = 1;
                 i++;
 
+
+                color[i] = getLight(norm(newU, newV, deltaColor),
+                                    new Vector(x - lightPosition.getX(), y - lightPosition.getY(), z - lightPosition.getZ()),
+                                    viewerPosition);
                 points[i][0] = x;
                 points[i][1] = y;
                 points[i][2] = z;
+                points[i][3] = 1;
                 i++;
             }
         }
-        return points;
-    }
 
+        return new Pair<>(points, color);
+    }
 
     private void drawFloor(GL2 gl) {
         gl.glBegin(GL2.GL_QUADS);
-        gl.glColor3d(0.7, 0.7, 0.7);
-        gl.glVertex3d(-2.0, -1.0, 4.0);
-        gl.glVertex3d(8.0, -1.0, 4.0);
-        gl.glVertex3d(8.0, -1.0, -4.0);
-        gl.glVertex3d(-2.0, -1.0, -4.0);
+        gl.glColor3d(0.3, 0.3, 0.35);
+        gl.glVertex3d(-4.0, -1.0, 4.0);
+        gl.glVertex3d(6.0, -1.0, 4.0);
+        gl.glVertex3d(6.0, -1.0, -4.0);
+        gl.glVertex3d(-4.0, -1.0, -4.0);
         gl.glEnd();
     }
 
@@ -302,17 +300,6 @@ public class Canvas extends GLCanvas implements GLEventListener {
 
         gl.glMatrixMode(GL_MODELVIEW);
         gl.glLoadIdentity();
-
-        double[] projMatrix = Utils.mirrorMatrixV2(new double[]{3, -1, 0}, new double[]{0, -1, 0});
-        gl.glMatrixMode(GL2.GL_PROJECTION);
-        gl.glLoadIdentity();
-        gl.glMultMatrixd(projMatrix, 0);
-        glu.gluPerspective(45.0, aspect, 0.1, 100.0);
-
-        gl.glMatrixMode(GL_MODELVIEW);
-        gl.glLoadIdentity();
-
-
     }
 
     private Vector norm(double u, double v, double delta) {
