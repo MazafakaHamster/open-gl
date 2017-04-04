@@ -1,4 +1,4 @@
-package com.rebel.opengl;
+package com.rebel.opengl.model;
 
 public class Vector {
     private double x;
@@ -36,6 +36,14 @@ public class Vector {
 
     public static double scal(Vector vectorA, Vector vectorB) {
         return vectorA.getX() * vectorB.getX() + vectorA.getY() * vectorB.getY() + vectorA.getZ() * vectorB.getZ();
+    }
+
+    public static double length(Vector vector) {
+        return Math.sqrt(vector.getX() * vector.getX() + vector.getY() * vector.getY() + vector.getZ() * vector.getZ());
+    }
+
+    public static Double angle(Vector vectorA, Vector vectorB) {
+        return Math.PI / 180 * scal(vectorA, vectorB) / (length(vectorA) * length(vectorB));
     }
 
     public Vector norm() {

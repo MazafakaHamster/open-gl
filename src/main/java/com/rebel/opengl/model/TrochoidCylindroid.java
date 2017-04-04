@@ -1,4 +1,4 @@
-package com.rebel.opengl;
+package com.rebel.opengl.model;
 
 /**
  * Created by Homia on 24.10.2016.
