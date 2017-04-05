@@ -79,4 +79,10 @@ public class Vector {
     public void setZ(double z) {
         this.z = z;
     }
+
+    public static void main(String[] args) {
+        for (int i = 1; i < 6; i++) {
+            System.out.println(i * 3 - 2);
+        }
+    }
 }

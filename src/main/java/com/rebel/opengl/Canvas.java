@@ -14,10 +14,7 @@ import javafx.util.Pair;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +44,17 @@ public class Canvas extends GLCanvas implements GLEventListener {
     private double[] matrix = new double[16];
     private List<double[][]> objectArray;
 
+    private static boolean moveFingerDown1 = false;
+    private static boolean moveFingerUp1 = false;
+    private static boolean moveFingerDown2 = false;
+    private static boolean moveFingerUp2 = false;
+    private static boolean moveFingerDown3 = false;
+    private static boolean moveFingerUp3 = false;
+    private static boolean moveFingerDown4 = false;
+    private static boolean moveFingerUp4 = false;
+    private static boolean moveFingerDown5 = false;
+    private static boolean moveFingerUp5 = false;
+
     public Canvas(Model model) {
         this.model = model;
         this.addGLEventListener(this);
@@ -57,6 +65,82 @@ public class Canvas extends GLCanvas implements GLEventListener {
 
         SwingUtilities.invokeLater(() -> {
             GLCanvas canvas = new Canvas(new TrochoidCylindroid(c, fi, alpha, h, p, teta0));
+
+            canvas.addKeyListener(new KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent e) {
+                }
+
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    switch (e.getKeyCode()) {
+                        case 81:
+                            moveFingerDown1 = true;
+                            break;
+                        case 87:
+                            moveFingerDown2 = true;
+                            break;
+                        case 69:
+                            moveFingerDown3 = true;
+                            break;
+                        case 82:
+                            moveFingerDown4 = true;
+                            break;
+                        case 84:
+                            moveFingerDown5 = true;
+                            break;
+                        case 65:
+                            moveFingerUp1 = true;
+                            break;
+                        case 83:
+                            moveFingerUp2 = true;
+                            break;
+                        case 68:
+                            moveFingerUp3 = true;
+                            break;
+                        case 70:
+                            moveFingerUp4 = true;
+                            break;
+                        case 71:
+                            moveFingerUp5 = true;
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    switch (e.getKeyCode()) {
+                        case 81:
+                            moveFingerDown1 = false;
+                            break;
+                        case 87:
+                            moveFingerDown2 = false;
+                            break;
+                        case 69:
+                            moveFingerDown3 = false;
+                            break;
+                        case 82:
+                            moveFingerDown4 = false;
+                            break;
+                        case 84:
+                            moveFingerDown5 = false;
+                            break;
+                        case 65:
+                            moveFingerUp1 = false;
+                            break;
+                        case 83:
+                            moveFingerUp2 = false;
+                            break;
+                        case 68:
+                            moveFingerUp3 = false;
+                            break;
+                        case 70:
+                            moveFingerUp4 = false;
+                            break;
+                        case 71:
+                            moveFingerUp5 = false;
+                    }
+                }
+            });
 
             canvas.addMouseMotionListener(new MouseMotionListener() {
                 @Override
@@ -149,45 +233,26 @@ public class Canvas extends GLCanvas implements GLEventListener {
     public void init(GLAutoDrawable drawable) {
         glu = new GLU();
 
-        /// palm
         addNewParalelipiped(new Vector(-4, 0, 0), new Vector(-4, 2, 0), 8, 2.5, 8);
-        /// little finger 1-st
+
         addNewParalelipiped(new Vector(-4.1, 8, 0), new Vector(-4.2, 9, 0), 1.8, 2, 3);
-        /// little finger 2-nd
         addNewParalelipiped(new Vector(-4.2, 10.8, 0), new Vector(-4.3, 12, 0), 1.6, 1.8, 2.25);
-        /// little finger 3-rd
         addNewParalelipiped(new Vector(-4.2, 12.6, 0), new Vector(-4.3, 14.3, 0), 1.5, 1.8, 2.5);
 
-
-        /// ring finger 1-st
         addNewParalelipiped(new Vector(-2.0, 8, 0), new Vector(-2.0, 9, 0), 1.9, 2, 4.5);
-        // ring finger 2-nd
         addNewParalelipiped(new Vector(-2.0, 12.5, 0), new Vector(-2.0, 13, 0), 1.9, 2, 3);
-        // ring finger 3-rf
         addNewParalelipiped(new Vector(-2.0, 15.5, 0), new Vector(-2.0, 16, 0), 1.8, 2, 2.5);
 
-
-        /// "middle" finder 1-st
         addNewParalelipiped(new Vector(0.2, 8, 0), new Vector(0.3, 9, 0), 1.9, 2, 4.8);
-        /// "middle" finder 2-nd
         addNewParalelipiped(new Vector(0.3, 12.8, 0), new Vector(0.3, 14, 0), 1.9, 2, 3.25);
-        /// "middle" finder 3-rd
         addNewParalelipiped(new Vector(0.4, 16.05, 0), new Vector(0.4, 17, 0), 1.8, 2, 2.5);
 
-
-        /// index finder 1-st
         addNewParalelipiped(new Vector(2.4, 8, 0), new Vector(2.8, 10, 0), 1.9, 2, 4.2);
-        /// index finder 2-nd
         addNewParalelipiped(new Vector(2.6, 12.2, 0), new Vector(2.7, 13, 0), 1.7, 2, 2.5);
-        /// index finder 3-rd
         addNewParalelipiped(new Vector(2.6, 14.7, 0), new Vector(2.7, 16, 0), 1.7, 2, 2.25);
 
-
-        /// thumb 1-st
         addNewParalelipiped(new Vector(4, 2.7, 0), new Vector(4, 2.8, 5), 3, 2, 3);
-        /// thumb 2-nd
         addNewParalelipiped(new Vector(7, 4.5, 0), new Vector(8.4, 4.9, 0), 2, 2, 2.5);
-        /// thumb 3-rd
         addNewParalelipiped(new Vector(9, 6.2, 0), new Vector(10.9, 8, 0), 1.8, 2, 2);
     }
 
@@ -213,20 +278,42 @@ public class Canvas extends GLCanvas implements GLEventListener {
         gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
         gl.glRotatef((float) oldAngleY, 1f, 0f, 0f);
 
-        gl.glBegin(GL2.GL_LINES);
-        gl.glColor3d(1.0, 0, 0);
-        gl.glVertex3d(0, 0, 0);
-        gl.glVertex3d(10, 0, 0);
-        gl.glColor3d(0, 1.0, 0);
-        gl.glVertex3d(0, 0, 0);
-        gl.glVertex3d(0, 10, 0);
-        gl.glColor3d(0, 0, 1.0);
-        gl.glVertex3d(0, 0, 0);
-        gl.glVertex3d(0, 0, 10);
-        gl.glEnd();
-        drawObjectArray(gl);
+        drawFingers(gl);
+
+        if (moveFingerDown1 || moveFingerUp1)
+            moveFinger(1, -1, 0, 0, moveFingerDown1 ? -0.3 : 0.3);
+        if (moveFingerDown2 || moveFingerUp2)
+            moveFinger(2, -1, 0, 0, moveFingerDown2 ? -0.3 : 0.3);
+        if (moveFingerDown3 || moveFingerUp3)
+            moveFinger(3, -1, 0, 0, moveFingerDown3 ? -0.3 : 0.3);
+        if (moveFingerDown4 || moveFingerUp4)
+            moveFinger(4, -1, 0, 0, moveFingerDown4 ? -0.3 : 0.3);
+        if (moveFingerDown5 || moveFingerUp5)
+            moveFinger(5, -1, 0, 0, moveFingerDown5 ? -0.3 : 0.3);
 
         gl.glPopMatrix();
+    }
+
+    private void moveFinger(int fingerNum, double x, double y, double z, double a) {
+        int block = fingerNum * 3 - 2;
+        double[][] fingerMatrixBottom = buildBlockTransformMatrix(objectArray.get(block), x, y, z, a);
+        for (int i = block; i < block + 3; i++) {
+            objectArray.set(i, Matrix.multiply(objectArray.get(i), fingerMatrixBottom));
+        }
+        block++;
+        double[][] fingerMatrixMiddle = buildBlockTransformMatrix(objectArray.get(block), x, y, z, a);
+        for (int i = block; i < block + 2; i++) {
+            objectArray.set(i, Matrix.multiply(objectArray.get(i), fingerMatrixMiddle));
+        }
+        block++;
+        double[][] fingerMatrixTop = buildBlockTransformMatrix(objectArray.get(block), x, y, z, a);
+        objectArray.set(block, Matrix.multiply(objectArray.get(block), fingerMatrixTop));
+    }
+
+    private double[][] buildBlockTransformMatrix(double[][] block, double x, double y, double z, double a) {
+        double[][] fingerMatrixTop = Matrix.translate(-block[0][0], -block[0][1], -block[0][2]);
+        fingerMatrixTop = Matrix.multiply(fingerMatrixTop, Matrix.rotate(x, y, z, a));
+        return Matrix.multiply(fingerMatrixTop, Matrix.translate(block[0][0], block[0][1], block[0][2]));
     }
 
     private void drawModel(GL2 gl, double[][] points, double[][] color) {
@@ -240,7 +327,7 @@ public class Canvas extends GLCanvas implements GLEventListener {
         gl.glEnd();
     }
 
-    public void drawObjectArray(GL2 gl) {
+    public void drawFingers(GL2 gl) {
         gl.glBegin(GL2.GL_LINES);
         gl.glColor3d(0.0, 1.0, 1.0);
         objectArray.forEach(object -> {
