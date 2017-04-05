@@ -152,35 +152,43 @@ public class Canvas extends GLCanvas implements GLEventListener {
         /// palm
         addNewParalelipiped(new Vector(-4, 0, 0), new Vector(-4, 2, 0), 8, 2.5, 8);
         /// little finger 1-st
-        addNewParalelipiped(new Vector(-4, 8, 0), new Vector(-4.2, 9, 0), 2, 2, 3);
+        addNewParalelipiped(new Vector(-4.1, 8, 0), new Vector(-4.2, 9, 0), 1.8, 2, 3);
         /// little finger 2-nd
-        addNewParalelipiped(new Vector(-4.6, 11, 0), new Vector(-4.8, 12, 0), 2, 2, 2.25);
+        addNewParalelipiped(new Vector(-4.2, 10.8, 0), new Vector(-4.3, 12, 0), 1.6, 1.8, 2.25);
         /// little finger 3-rd
-        addNewParalelipiped(new Vector(-5.0, 13.3, 0), new Vector(-5.2, 14.3, 0), 1.8, 2, 2.5);
+        addNewParalelipiped(new Vector(-4.2, 12.6, 0), new Vector(-4.3, 14.3, 0), 1.5, 1.8, 2.5);
+
+
         /// ring finger 1-st
-        addNewParalelipiped(new Vector(-1.8, 8, 0), new Vector(-1.8, 9, 0), 2, 2, 4.5);
+        addNewParalelipiped(new Vector(-2.0, 8, 0), new Vector(-2.0, 9, 0), 1.9, 2, 4.5);
         // ring finger 2-nd
-        addNewParalelipiped(new Vector(-1.8, 12.5, 0), new Vector(-1.8, 13, 0), 2, 2, 3);
+        addNewParalelipiped(new Vector(-2.0, 12.5, 0), new Vector(-2.0, 13, 0), 1.9, 2, 3);
         // ring finger 3-rf
-        addNewParalelipiped(new Vector(-1.7, 15.5, 0), new Vector(-1.7, 16, 0), 1.8, 2, 2.5);
+        addNewParalelipiped(new Vector(-2.0, 15.5, 0), new Vector(-2.0, 16, 0), 1.8, 2, 2.5);
+
+
         /// "middle" finder 1-st
-        addNewParalelipiped(new Vector(0.2, 8.2, 0), new Vector(0.3, 9, 0), 2, 2, 4.8);
+        addNewParalelipiped(new Vector(0.2, 8, 0), new Vector(0.3, 9, 0), 1.9, 2, 4.8);
         /// "middle" finder 2-nd
-        addNewParalelipiped(new Vector(0.75, 13, 0), new Vector(0.9, 14, 0), 2, 2, 3.25);
+        addNewParalelipiped(new Vector(0.3, 12.8, 0), new Vector(0.3, 14, 0), 1.9, 2, 3.25);
         /// "middle" finder 3-rd
-        addNewParalelipiped(new Vector(1.3, 16.25, 0), new Vector(1.4, 17, 0), 1.9, 2, 2.5);
+        addNewParalelipiped(new Vector(0.4, 16.05, 0), new Vector(0.4, 17, 0), 1.8, 2, 2.5);
+
+
         /// index finder 1-st
-        addNewParalelipiped(new Vector(2.4, 8.4, 0), new Vector(2.8, 10, 0), 2, 2, 4.2);
+        addNewParalelipiped(new Vector(2.4, 8, 0), new Vector(2.8, 10, 0), 1.9, 2, 4.2);
         /// index finder 2-nd
-        addNewParalelipiped(new Vector(3.4, 12.6, 0), new Vector(3.5, 13, 0), 2, 2, 2.5);
+        addNewParalelipiped(new Vector(2.6, 12.2, 0), new Vector(2.7, 13, 0), 1.7, 2, 2.5);
         /// index finder 3-rd
-        addNewParalelipiped(new Vector(4, 15.1, 0), new Vector(4.2, 16, 0), 2, 2, 2.25);
+        addNewParalelipiped(new Vector(2.6, 14.7, 0), new Vector(2.7, 16, 0), 1.7, 2, 2.25);
+
+
         /// thumb 1-st
-        addNewParalelipiped(new Vector(3.5, 2.5, 0), new Vector(4, 3, 0), 3, 2.5, 4);
+        addNewParalelipiped(new Vector(4, 2.7, 0), new Vector(4, 2.8, 5), 3, 2, 3);
         /// thumb 2-nd
-        addNewParalelipiped(new Vector(6.5, 5, 0), new Vector(8.4, 7, 0), 2.5, 2.5, 3.25);
+        addNewParalelipiped(new Vector(7, 4.5, 0), new Vector(8.4, 4.9, 0), 2, 2, 2.5);
         /// thumb 3-rd
-        addNewParalelipiped(new Vector(9.2, 7.2, 0), new Vector(10.9, 9, 0), 2, 2.5, 2.75);
+        addNewParalelipiped(new Vector(9, 6.2, 0), new Vector(10.9, 8, 0), 1.8, 2, 2);
     }
 
     @Override
@@ -204,31 +212,6 @@ public class Canvas extends GLCanvas implements GLEventListener {
         gl.glTranslatef((float) xPosition, (float) yPosition, zoom);
         gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
         gl.glRotatef((float) oldAngleY, 1f, 0f, 0f);
-
-//        Pair<double[][], double[][]> pair = calculateModel();
-//
-//        double[][] points = pair.getKey();
-//        double[][] color = pair.getValue();
-//
-//        double[][] reflectionMatrix = Utils.mirrorMatrix(new double[]{0, -4, 0}, new double[]{0.7, 1, 0.7});
-//
-//        double[][] projected = new double[points.length][points[0].length];
-//        for (int i = 0; i < points.length; i++) {
-//            projected[i] = Utils.vectMatrixMult(reflectionMatrix, points[i]);
-//        }
-
-//        gl.glEnable(GL2.GL_DEPTH_TEST);
-
-//        drawModel(gl, points, color);
-//        drawModel(gl, projected, color);
-
-//        gl.glEnable(GL2.GL_BLEND);
-//        gl.glBlendFunc(GL2.GL_SRC_COLOR, GL2.GL_DST_COLOR);
-
-//        drawFloor(gl);
-
-//        gl.glDisable(GL2.GL_BLEND);
-//        gl.glDisable(GL2.GL_DEPTH_TEST);
 
         gl.glBegin(GL2.GL_LINES);
         gl.glColor3d(1.0, 0, 0);
@@ -259,7 +242,7 @@ public class Canvas extends GLCanvas implements GLEventListener {
 
     public void drawObjectArray(GL2 gl) {
         gl.glBegin(GL2.GL_LINES);
-        gl.glColor3d(1.0, 1.0, 0);
+        gl.glColor3d(0.0, 1.0, 1.0);
         objectArray.forEach(object -> {
             gl.glVertex3d(object[0][0], object[0][1], object[0][2]);
             gl.glVertex3d(object[1][0], object[1][1], object[1][2]);
@@ -315,27 +298,11 @@ public class Canvas extends GLCanvas implements GLEventListener {
         double zRotation = Vector.angle(new Vector(initVector.getX(), initVector.getY(), 0),
                                         new Vector(transformedVector.getX(), transformedVector.getY(), 0));
 
-        double[][] rotationAroundX = /*Matrix.rotate(1, 0, 0, xRotation);*/ {
-                new double[]{1, 0, 0, 0},
-                new double[]{0, Math.cos(xRotation), Math.sin(xRotation), 0},
-                new double[]{0, -Math.sin(xRotation), Math.cos(xRotation), 0},
-                new double[]{0, 0, 0, 1}
-        };
+        double[][] rotationAroundX = Matrix.rotate(1, 0, 0, xRotation);
 
-        double[][] rotationAroundZ = /*(Matrix.rotate(0, 0, 1, zRotation);*/ {
-                new double[]{Math.cos(zRotation), -Math.sin(zRotation), 0, 0},
-                new double[]{Math.sin(zRotation), Math.cos(zRotation), 0, 0},
-                new double[]{0, 0, 1, 0},
-                new double[]{0, 0, 0, 1}
-        };
+        double[][] rotationAroundZ = Matrix.rotate(0, 0, 1, zRotation);
 
-        double[][] translate = new double[][]{
-                new double[]{1, 0, 0, 0},
-                new double[]{0, 1, 0, 0},
-                new double[]{0, 0, 1, 0},
-                new double[]{start.getX(), start.getY(), start.getZ(), 1}
-        };
-//        Matrix.translate(start.getX(), start.getY(), start.getY());
+        double[][] translate = Matrix.translate(start.getX(), start.getY(), start.getZ());
 
         double[][] result = Matrix.multiply(rotationAroundX, rotationAroundZ);
 
