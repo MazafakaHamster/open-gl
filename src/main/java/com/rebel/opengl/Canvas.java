@@ -4,7 +4,6 @@ import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.awt.GLCanvas;
-import com.jogamp.opengl.fixedfunc.GLLightingFunc;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.FPSAnimator;
 import javafx.util.Pair;
@@ -169,16 +168,16 @@ public class Canvas extends GLCanvas implements GLEventListener {
         double[][] color = pair.getValue();
 
 //        double[][] reflectionMatrix = Utils.mirrorMatrix(new double[]{0, -4, 0}, new double[]{0.7, 1, 0.7});
-
+//
 //        double[][] projected = new double[points.length][points[0].length];
 //        for (int i = 0; i < points.length; i++) {
 //            projected[i] = Utils.vectMatrixMult(reflectionMatrix, points[i]);
 //        }
-
+//
         gl.glEnable(GL2.GL_DEPTH_TEST);
-
+//
 //        drawModel(gl, points, color);
-
+//
 //        drawModel(gl, projected, color);
 //
 //        gl.glEnable(GL2.GL_BLEND);
@@ -187,28 +186,15 @@ public class Canvas extends GLCanvas implements GLEventListener {
 //        drawFloor(gl);
 //
 //        gl.glDisable(GL2.GL_BLEND);
-//
+
 //        gl.glDisable(GL2.GL_DEPTH_TEST);
 
-        ApplyFrustum(gl, true);
-        gl.glColorMask(true, false, false, false);
-        drawModel(gl, points, color);
-
-        gl.glClear(GL2.GL_DEPTH_BUFFER_BIT);
-
-        ApplyFrustum(gl, false);
-        gl.glColorMask(false, true, true, false);
-        drawModel(gl, points, color);
-
-        gl.glDisable(GL2.GL_DEPTH_TEST);
-        gl.glColorMask(true, true, true, true);
+        drawFrustums(gl, points, color);
     }
 
     private void drawModel(GL2 gl, double[][] points, double[][] color) {
         gl.glPushMatrix();
         gl.glBegin(GL2.GL_POLYGON);
-        gl.glShadeModel(GLLightingFunc.GL_SMOOTH);
-
         for (int i = 0; i < points.length; i++) {
             gl.glColor3d(color[i][0], color[i][1], color[i][2]);
             gl.glVertex3d(points[i][0], points[i][1], points[i][2]);
@@ -365,33 +351,63 @@ public class Canvas extends GLCanvas implements GLEventListener {
         return new double[]{light.getX(), light.getY(), light.getZ()};
     }
 
-    private void ApplyFrustum(GL2 gl, boolean isLeft) {
-        double zNear = 0.5;
-        double zFar = 50;
-        double dEye = 0.008;
-        double conv = 0.5;
-        double theta = 30;
+    private void drawFrustums(GL2 gl, double[][] points, double[][] color) {
+        double distance = 0.008;
+        double convergence = 0.5;
+        double angle = 45;
         double aspectRatio = getWidth() / getHeight();
+        double near = 0.5;
+        double far = 50;
 
-        double a = aspectRatio * Math.tan(theta / 2) * conv;
-        double b = a - dEye / 2;
-        double c = a + dEye / 2;
-        double top = zNear * Math.tan(theta / 2);
+        double halfDistance = distance / 2;
+        double halfAngle = angle / 2;
+
+        double a = aspectRatio * Math.tan(halfAngle) * convergence;
+        double b = a - halfDistance;
+        double c = a + halfDistance;
+        double top = near * Math.tan(halfAngle);
         double bottom = -top;
-        double left = (isLeft ? -b : -c) * zNear / conv;
-        double right = (isLeft ? c : b) * zNear / conv;
+
+        double leftL = -b * near / convergence;
+        double rightL = c * near / convergence;
 
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
-        gl.glFrustum(left, right, bottom, top, zNear, zFar);
+        gl.glFrustum(leftL, rightL, bottom, top, near, far);
 
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
-        gl.glTranslated((isLeft ? 1 : -1) * dEye / 2, 0, 0);
+        gl.glTranslated(halfDistance, 0, 0);
 
         gl.glTranslated(xPosition, yPosition, zoom);
         gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
         gl.glRotatef((float) oldAngleY, 1f, 0f, 0f);
+
+        gl.glColorMask(true, false, false, false);
+        drawModel(gl, points, color);
+
+        gl.glClear(GL2.GL_DEPTH_BUFFER_BIT);
+
+        double leftR = -c * near / convergence;
+        double rightR = b * near / convergence;
+
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glLoadIdentity();
+        gl.glFrustum(leftR, rightR, bottom, top, near, far);
+
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glLoadIdentity();
+        gl.glTranslated(-halfDistance, 0, 0);
+
+        gl.glTranslated(xPosition, yPosition, zoom);
+        gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
+        gl.glRotatef((float) oldAngleY, 1f, 0f, 0f);
+
+        gl.glColorMask(false, true, true, false);
+        drawModel(gl, points, color);
+
+        gl.glDisable(GL2.GL_DEPTH_TEST);
+        gl.glColorMask(true, true, true, true);
     }
 
     private Vector initPos(double[] matrix) {
