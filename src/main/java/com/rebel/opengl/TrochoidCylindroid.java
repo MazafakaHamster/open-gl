@@ -1,8 +1,5 @@
 package com.rebel.opengl;
 
-/**
- * Created by Homia on 24.10.2016.
- */
 public class TrochoidCylindroid implements Model {
 
     private final double c;
