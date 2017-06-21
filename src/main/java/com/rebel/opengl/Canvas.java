@@ -1,11 +1,22 @@
 package com.rebel.opengl;
 
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamResolution;
+import com.jogamp.common.nio.Buffers;
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.FPSAnimator;
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.TextureIO;
+import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
+import com.xuggle.xuggler.IPixelFormat;
+import com.xuggle.xuggler.IVideoPicture;
+import com.xuggle.xuggler.video.ConverterFactory;
+import com.xuggle.xuggler.video.IConverter;
 import javafx.util.Pair;
 
 import javax.swing.*;
@@ -14,6 +25,9 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 import static com.jogamp.opengl.GL.GL_COLOR_BUFFER_BIT;
 import static com.jogamp.opengl.GL.GL_DEPTH_BUFFER_BIT;
@@ -36,6 +50,9 @@ public class Canvas extends GLCanvas implements GLEventListener {
     private static double teta0 = 0;
     private static double p = k * Math.PI;
     private static float deltaZoom = 1f;
+    private static Webcam webcam;
+    private static Long start;
+    private static Long count = 0L;
     private final Model model;
     private GLU glu;
     private double[] matrix = new double[16];
@@ -140,6 +157,12 @@ public class Canvas extends GLCanvas implements GLEventListener {
     @Override
     public void init(GLAutoDrawable drawable) {
         glu = new GLU();
+        Dimension size = WebcamResolution.VGA.getSize();
+
+        webcam = Webcam.getDefault();
+        webcam.setViewSize(size);
+        webcam.open(true);
+        start = System.currentTimeMillis();
     }
 
     @Override
@@ -151,12 +174,13 @@ public class Canvas extends GLCanvas implements GLEventListener {
     public void display(GLAutoDrawable drawable) {
         GL2 gl = drawable.getGL().getGL2();
         gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         gl.glLoadIdentity();
-
         gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, matrix, 0);
-
         gl.glDisable(GL2.GL_LIGHTING);
+        gl.glEnable(GL2.GL_TEXTURE_2D);
+
+        gl.glEnable(GL2.GL_DEPTH_TEST);
+        drawBackground(gl);
 
         gl.glTranslatef((float) xPosition, (float) yPosition, zoom);
         gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
@@ -167,34 +191,43 @@ public class Canvas extends GLCanvas implements GLEventListener {
         double[][] points = pair.getKey();
         double[][] color = pair.getValue();
 
-//        double[][] reflectionMatrix = Utils.mirrorMatrix(new double[]{0, -4, 0}, new double[]{0.7, 1, 0.7});
-//
-//        double[][] projected = new double[points.length][points[0].length];
-//        for (int i = 0; i < points.length; i++) {
-//            projected[i] = Utils.vectMatrixMult(reflectionMatrix, points[i]);
-//        }
-//
-        gl.glEnable(GL2.GL_DEPTH_TEST);
-//
-//        drawModel(gl, points, color);
-//
-//        drawModel(gl, projected, color);
-//
-//        gl.glEnable(GL2.GL_BLEND);
-//        gl.glBlendFunc(GL2.GL_SRC_COLOR, GL2.GL_DST_COLOR);
-//
-//        drawFloor(gl);
-//
-//        gl.glDisable(GL2.GL_BLEND);
 
-//        gl.glDisable(GL2.GL_DEPTH_TEST);
 
         drawFrustums(gl, points, color);
+    }
+
+    private void drawBackground(GL2 gl) {
+        BufferedImage image = ConverterFactory.convertToType(webcam.getImage(), BufferedImage.TYPE_3BYTE_BGR);
+        Texture texture = AWTTextureIO.newTexture(getGLProfile(), image, false);
+        int t = texture.getTextureObject(gl);
+
+        gl.glBindTexture(GL2.GL_TEXTURE_2D, t);
+        gl.glBegin(GL2.GL_TRIANGLES);
+
+        gl.glColor3d(1, 1, 1);
+
+        gl.glTexCoord2f(0, 1);
+        gl.glVertex3f(-4, -4, -6); //a
+        gl.glTexCoord2f(1, 1);
+        gl.glVertex3f(4, -4, -6); //b
+        gl.glTexCoord2f(0, 0);
+        gl.glVertex3f(-4, 4, -6); //c
+
+        gl.glTexCoord2f(1, 1);
+        gl.glVertex3f(4, -4, -6); //d
+        gl.glTexCoord2f(0, 0);
+        gl.glVertex3f(-4, 4, -6); //e
+        gl.glTexCoord2f(1, 0);
+        gl.glVertex3f(4, 4, -6); //f
+
+        gl.glEnd();
+        gl.glPopMatrix();
     }
 
     private void drawModel(GL2 gl, double[][] points, double[][] color) {
         gl.glPushMatrix();
         gl.glBegin(GL2.GL_POLYGON);
+
         for (int i = 0; i < points.length; i++) {
             gl.glColor3d(color[i][0], color[i][1], color[i][2]);
             gl.glVertex3d(points[i][0], points[i][1], points[i][2]);
