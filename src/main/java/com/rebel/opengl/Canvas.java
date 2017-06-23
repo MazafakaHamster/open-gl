@@ -2,8 +2,6 @@ package com.rebel.opengl;
 
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamResolution;
-import com.jogamp.common.nio.Buffers;
-import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
@@ -11,28 +9,31 @@ import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.FPSAnimator;
 import com.jogamp.opengl.util.texture.Texture;
-import com.jogamp.opengl.util.texture.TextureIO;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
-import com.xuggle.xuggler.IPixelFormat;
-import com.xuggle.xuggler.IVideoPicture;
 import com.xuggle.xuggler.video.ConverterFactory;
-import com.xuggle.xuggler.video.IConverter;
+import io.vertx.core.Vertx;
+import io.vertx.core.datagram.DatagramSocket;
 import javafx.util.Pair;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 import javax.swing.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.StringReader;
 
 import static com.jogamp.opengl.GL.GL_COLOR_BUFFER_BIT;
 import static com.jogamp.opengl.GL.GL_DEPTH_BUFFER_BIT;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_MODELVIEW;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_PROJECTION;
+import static java.util.Objects.nonNull;
 
 public class Canvas extends GLCanvas implements GLEventListener {
     private static double oldAngleX;
@@ -51,18 +52,56 @@ public class Canvas extends GLCanvas implements GLEventListener {
     private static double p = k * Math.PI;
     private static float deltaZoom = 1f;
     private static Webcam webcam;
-    private static Long start;
-    private static Long count = 0L;
     private final Model model;
     private GLU glu;
     private double[] matrix = new double[16];
+
+    private static double accelX;
+    private static double accelY;
 
     public Canvas(Model model) {
         this.model = model;
         this.addGLEventListener(this);
     }
 
+    private static Document toDocument(String xml) {
+        Document doc = null;
+        try {
+            DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            InputSource is = new InputSource();
+            is.setCharacterStream(new StringReader(xml));
+            doc = db.parse(is);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return doc;
+    }
+
+    private static String getValue(Document document, String element) {
+        NodeList nodeList = document.getElementsByTagName(element);
+        if (nodeList.getLength() == 0) {
+            return null;
+        }
+        return nodeList.item(0).getTextContent();
+    }
+
     public static void main(String[] args) {
+        Vertx vertx = Vertx.vertx();
+        DatagramSocket datagramSocket = vertx.createDatagramSocket();
+
+        datagramSocket.listen(8090, "192.168.1.2", h -> {
+            if (h.succeeded()) {
+                datagramSocket.handler(packet -> {
+                    Document document = toDocument(packet.data().toString().replace("'yes' ?>", "'yes' ?><data>") + "</data>");
+                    if (nonNull(document)) {
+                        accelX = Double.valueOf(getValue(document, "Accelerometer1")) * 25;
+                        accelY = Double.valueOf(getValue(document, "Accelerometer2")) * 25;
+                    }
+                });
+            } else {
+                h.cause().printStackTrace();
+            }
+        });
 
         SwingUtilities.invokeLater(() -> {
             GLCanvas canvas = new Canvas(new TrochoidCylindroid(c, fi, alpha, h, p, teta0));
@@ -158,11 +197,9 @@ public class Canvas extends GLCanvas implements GLEventListener {
     public void init(GLAutoDrawable drawable) {
         glu = new GLU();
         Dimension size = WebcamResolution.VGA.getSize();
-
         webcam = Webcam.getDefault();
         webcam.setViewSize(size);
         webcam.open(true);
-        start = System.currentTimeMillis();
     }
 
     @Override
@@ -180,18 +217,15 @@ public class Canvas extends GLCanvas implements GLEventListener {
         gl.glEnable(GL2.GL_TEXTURE_2D);
 
         gl.glEnable(GL2.GL_DEPTH_TEST);
+
         drawBackground(gl);
 
         gl.glTranslatef((float) xPosition, (float) yPosition, zoom);
-        gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
-        gl.glRotatef((float) oldAngleY, 1f, 0f, 0f);
 
         Pair<double[][], double[][]> pair = calculateModel();
 
         double[][] points = pair.getKey();
         double[][] color = pair.getValue();
-
-
 
         drawFrustums(gl, points, color);
     }
@@ -416,6 +450,12 @@ public class Canvas extends GLCanvas implements GLEventListener {
         gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
         gl.glRotatef((float) oldAngleY, 1f, 0f, 0f);
 
+        double newX = accelX;
+        double newY = accelY;
+
+        gl.glRotatef((float) newX, 0f, 1f, 0f);
+        gl.glRotatef((float) newY, 1f, 0f, 0f);
+
         gl.glColorMask(true, false, false, false);
         drawModel(gl, points, color);
 
@@ -435,6 +475,9 @@ public class Canvas extends GLCanvas implements GLEventListener {
         gl.glTranslated(xPosition, yPosition, zoom);
         gl.glRotatef((float) oldAngleX, 0f, 1f, 0f);
         gl.glRotatef((float) oldAngleY, 1f, 0f, 0f);
+
+        gl.glRotatef((float) newX, 0f, 1f, 0f);
+        gl.glRotatef((float) newY, 1f, 0f, 0f);
 
         gl.glColorMask(false, true, true, false);
         drawModel(gl, points, color);

@@ -48,23 +48,4 @@ public class Utils {
         }
         return result;
     }
-
-    public static void main(String[] args) {
-        double uStart = 0;
-        double uEnd = 1;
-        double deltaU = 0.02d;
-        double deltaV = 0.02d;
-        double vStart = 0;
-        double vEnd = 4;
-        int n = 6080;
-
-        int i = 0;
-        for (double tempU = uStart; tempU < uEnd - deltaU; tempU += deltaU) {
-            for (double tempV = vStart; tempV < vEnd - deltaV; tempV += deltaV) {
-                i += 4;
-            }
-        }
-
-        System.out.println(i);
-    }
 }
